@@ -53,6 +53,10 @@ namespace bHapticsMusical
             GameObject.DontDestroyOnLoad(this); // Don't destroy this object on scene changes
             Instance = this;
             Plugin.Log?.Debug($"{name}: Awake()");
+            tactsuitVr = new TactsuitVR();
+            // one startup heartbeat so you know the vest works correctly
+            myEffectStrings = tactsuitVr.myEffectStrings;
+            tactsuitVr.PlaybackHaptics("HeartBeat");
             var harmony = new Harmony("bhaptics.musical.patch.beatsaber");
             harmony.PatchAll();
 
@@ -78,7 +82,7 @@ namespace bHapticsMusical
             public static void Postfix()
             {
                 if (ringEffectOff) return;
-                tactsuitVr.PlaySpecialEffect("RingRotation");
+                tactsuitVr.PlaybackHaptics("RingRotation");
             }
         }
 
@@ -91,7 +95,7 @@ namespace bHapticsMusical
                 // If it's a "special" effect, just play a pattern
                 if ((beatmapEventData.type == BeatmapEventType.Special0) | (beatmapEventData.type == BeatmapEventType.Special1) | (beatmapEventData.type == BeatmapEventType.Special2) | (beatmapEventData.type == BeatmapEventType.Special3))
                 {
-                    tactsuitVr.PlaySpecialEffect(tactsuitVr.myEffectStrings[rnd.Next(myEffectStrings.Count())]);
+                    tactsuitVr.PlaybackHaptics(tactsuitVr.myEffectStrings[rnd.Next(myEffectStrings.Count())]);
                     return;
                 }
 
@@ -121,7 +125,7 @@ namespace bHapticsMusical
                     // reset trigger (if it was lowered)
                     currentTriggerNumber = defaultTriggerNumber;
                     string effectName = myEffectStrings[rnd.Next(myEffectStrings.Count())];
-                    tactsuitVr.PlaySpecialEffect(effectName);
+                    tactsuitVr.PlaybackHaptics(effectName);
 
                     // check if default trigger was set way too high or too low
                     float weight = (float)numberOfEvents / (float)defaultTriggerNumber / weightFactor;
