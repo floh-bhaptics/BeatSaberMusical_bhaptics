@@ -57,7 +57,7 @@ namespace MyBhapticsTactsuit
         {
             // Get location of the compiled assembly and search through "bHaptics" directory and contained patterns
             // string configPath = Directory.GetCurrentDirectory() + "\\Plugins\\bHaptics";
-            string configPath = IPA.Utilities.UnityGame.UserDataPath + "\\bHapticsPatterns";
+            string configPath = IPA.Utilities.UnityGame.UserDataPath + "\\bHapticsMusical";
             //LOG("Path: " + configPath);
             DirectoryInfo d = new DirectoryInfo(configPath);
             FileInfo[] Files = d.GetFiles("*.tact", SearchOption.AllDirectories);
@@ -103,55 +103,10 @@ namespace MyBhapticsTactsuit
             }
         }
 
-        public void Recoil(string weaponName, bool isRightHand, float intensity = 1.0f)
-        {
-            // weaponName is a parameter that will go into the vest feedback pattern name
-            // isRightHand is just which side the feedback is on
-            // intensity should usually be between 0 and 1
-
-            float duration = 1.0f;
-            var scaleOption = new ScaleOption(intensity, duration);
-            // the function needs some rotation if you want to give the scale option as well
-            var rotationFront = new RotationOption(0f, 0f);
-            // make postfix according to parameter
-            string postfix = "_L";
-            if (isRightHand) { postfix = "_R"; }
-
-            // stitch together pattern names for Arm and Hand recoil
-            string keyHands = "RecoilHands" + postfix;
-            string keyArm = "Recoil" + postfix;
-            // vest pattern name contains the weapon name. This way, you can quickly switch
-            // between swords, pistols, shotguns, ... by just changing the shoulder feedback
-            // and scaling via the intensity for arms and hands
-            string keyVest = "Recoil" + weaponName + "Vest" + postfix;
-            hapticPlayer.SubmitRegistered(keyHands, scaleOption);
-            hapticPlayer.SubmitRegistered(keyArm, scaleOption);
-            hapticPlayer.SubmitRegistered(keyVest, scaleOption);
-        }
-
-
         public bool IsPlaying(String effect)
         {
             return IsPlaying(effect);
         }
-
-        public void PlaySpecialEffect(string effect)
-        {
-            foreach (string myEffect in myEffectStrings)
-            {
-                if (IsPlaying(myEffect)) return;
-            }
-            if (IsPlaying(effect)) return;
-            PlaybackHaptics(effect);
-        }
-
-        public void StopThreads()
-        {
-            // Yes, looks silly here, but if you have several threads like this, this is
-            // very useful when the player dies or starts a new level
-            //StopHeartBeat();
-        }
-
 
     }
 }
