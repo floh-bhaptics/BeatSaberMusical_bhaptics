@@ -22,8 +22,9 @@ So you can easily delete, replace, or add any effects here to adjust the mod to 
 
 ## Compilation / installation
 
-The mod uses BSIPA to hook into Beat Saber methods via Harmony, so BSIPA has to be installed. It does not touch the game variables or functions and only
-hook in to trigger feedback. It expects the haptics feedback patterns to be placed in `UserData\bHapticsMusical\`. They can be modified or replaced by
+The mod uses BSIPA to hook into Beat Saber methods via Harmony, and uses the bHaptics library to interface the HTTP/TLS interface of the bHaptics Player.
+So BSIPA and the bHaptics library have to be installed on Beat Saber.  It does not touch the game variables or functions and only
+hooks in to trigger feedback. It expects the haptics feedback patterns to be placed in `UserData\bHapticsMusical\`. They can be modified or replaced by
 the user if they want different kinds of feedback.
 
 The mod is built with Visual Studio 2019 and should just compile if the BSIPA modding tools are installed correctly.
