@@ -7,6 +7,13 @@ I made a second *"bHapticsFunctional"* mod that will provide feedback for action
 You can see a short demo of the effects provided by both mods here:
 [https://www.youtube.com/watch?v=X15WuW8BiaM](https://www.youtube.com/watch?v=X15WuW8BiaM)
 
+## Adjusting the feedback patterns
+
+On light effects, the mod will randomly trigger one of the patterns found in ``UserData\bHapticsMusical\``. If the folder does not exist
+(e.g. on the first run), it will be created and 6 default patterns will be placed in there. You can easily delete, replace, or add any effects
+here to adjust the mod to your liking. Use the [bhaptics designer](https://designer.bhaptics.com/) for this, which can import, adjust and
+export the ``.tact`` files. To reset the patterns, just delete or rename the ``bHapticsMusical`` folder and start the game with the mod once.
+
 ## The way it works
 
 On loading a song, the mod will analyze the lighting effect events in the map and estimate what "amount" of light changes constitutes a larger
@@ -15,10 +22,6 @@ turns out to be set way too high or too low during the song.
 
 Additionally, the mod will trigger a pattern drawing a circle on your chest if the background spiral rotation effect appears in the song.
 
-## Adjusting the feedback patterns
-
-On light effects, the mod will randomly trigger one of the patterns found in ``UserData\bHapticsMusical\`` that start with the string "LightEffect".
-So you can easily delete, replace, or add any effects here to adjust the mod to your liking.
 
 ## Compilation / installation
 
