@@ -111,11 +111,28 @@
     <Compile Include="Configuration\PluginConfig.cs" />
     <Compile Include="bHapticsMusicalController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="bHapticsMusical\HeartBeat.tact" />
+    <None Include="bHapticsMusical\LightEffect1.tact" />
+    <None Include="bHapticsMusical\LightEffect2.tact" />
+    <None Include="bHapticsMusical\LightEffect3.tact" />
+    <None Include="bHapticsMusical\LightEffect4.tact" />
+    <None Include="bHapticsMusical\LightEffect5.tact" />
+    <None Include="bHapticsMusical\LightEffect6.tact" />
+    <None Include="bHapticsMusical\RingRotation.tact" />
     <None Include="Directory.Build.props" Condition="Exists('Directory.Build.props')" />
     <None Include="bHapticsMusical.csproj.user" Condition="Exists('BeatSaberMusical_bhaptics.csproj.user')" />
   </ItemGroup>

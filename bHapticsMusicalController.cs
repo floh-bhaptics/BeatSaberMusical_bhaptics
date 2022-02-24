@@ -92,6 +92,7 @@ namespace bHapticsMusical
             [HarmonyPostfix]
             public static void Postfix(BeatmapEventData beatmapEventData)
             {
+                if (myEffectStrings.Count() == 0) return;
                 // If it's a "special" effect, just play a pattern
                 if ((beatmapEventData.type == BeatmapEventType.Special0) | (beatmapEventData.type == BeatmapEventType.Special1) | (beatmapEventData.type == BeatmapEventType.Special2) | (beatmapEventData.type == BeatmapEventType.Special3))
                 {

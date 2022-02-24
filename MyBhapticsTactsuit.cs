@@ -4,6 +4,10 @@ using System.IO;
 using System.Text;
 using Bhaptics.Tact;
 using bHapticsMusical;
+using System.Resources;
+using System.Globalization;
+using System.Collections;
+
 
 namespace MyBhapticsTactsuit
 {
@@ -20,7 +24,8 @@ namespace MyBhapticsTactsuit
         // Event to start and stop the heartbeat thread
         //private static ManualResetEvent HeartBeat_mrse = new ManualResetEvent(false);
         // dictionary of all feedback patterns found in the bHaptics directory
-        public Dictionary<String, FileInfo> FeedbackMap = new Dictionary<String, FileInfo>();
+        public Dictionary<String, String> FeedbackMap = new Dictionary<String, String>();
+        public Dictionary<String, String> defaultEffects = new Dictionary<String, String>();
         public List<string> myEffectStrings = new List<string> { };
 
 #pragma warning disable CS0618 // remove warning that the C# library is deprecated
@@ -55,10 +60,38 @@ namespace MyBhapticsTactsuit
 
         void RegisterAllTactFiles()
         {
+            ResourceSet resourceSet = bHapticsMusical.Properties.Resources.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
+
+            foreach (DictionaryEntry dict in resourceSet)
+            {
+                if (dict.Key.ToString().StartsWith("LightEffect"))
+                {
+                    defaultEffects.Add(dict.Key.ToString(), dict.Value.ToString());
+                    continue;
+                }
+                try
+                {
+                    hapticPlayer.RegisterTactFileStr(dict.Key.ToString(), dict.Value.ToString());
+                    LOG("Pattern registered: " + dict.Key.ToString());
+                }
+                catch (Exception e) { LOG(e.ToString()); }
+
+                FeedbackMap.Add(dict.Key.ToString(), dict.Value.ToString());
+            }
+
             // Get location of the compiled assembly and search through "bHaptics" directory and contained patterns
             // string configPath = Directory.GetCurrentDirectory() + "\\Plugins\\bHaptics";
-            string configPath = IPA.Utilities.UnityGame.UserDataPath + "\\bHapticsMusical";
+            string configPath = Path.Combine(IPA.Utilities.UnityGame.UserDataPath, "bHapticsMusical");
             //LOG("Path: " + configPath);
+            if (!Directory.Exists(configPath))
+            {
+                Directory.CreateDirectory(configPath);
+                foreach (KeyValuePair<string, string> dict in defaultEffects)
+                {
+                    string filePath = Path.Combine(configPath, dict.Key + ".tact");
+                    File.WriteAllText(filePath, dict.Value);
+                }
+            }
             DirectoryInfo d = new DirectoryInfo(configPath);
             FileInfo[] Files = d.GetFiles("*.tact", SearchOption.AllDirectories);
             for (int i = 0; i < Files.Length; i++)
@@ -73,16 +106,13 @@ namespace MyBhapticsTactsuit
                 try
                 {
                     hapticPlayer.RegisterTactFileStr(prefix, tactFileStr);
-                    LOG("Pattern registered: " + prefix);
+                    LOG("Light effect pattern registered: " + prefix);
                 }
                 catch (Exception e) { LOG(e.ToString()); }
 
-                FeedbackMap.Add(prefix, Files[i]);
-                if (prefix.StartsWith("LightEffect"))
-                {
-                    myEffectStrings.Add(prefix);
-                    LOG("Light effect pattern added: " + prefix);
-                }
+                FeedbackMap.Add(prefix, tactFileStr);
+                myEffectStrings.Add(prefix);
+                
             }
             systemInitialized = true;
         }
