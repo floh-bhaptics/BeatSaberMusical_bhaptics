@@ -85,73 +85,87 @@ namespace bHapticsMusical
                 tactsuitVr.PlaybackHaptics("RingRotation");
             }
         }
-
-        [HarmonyPatch(typeof(EnvironmentSpawnRotation), "BeatmapEventAtNoteSpawnCallback", new Type[] { typeof(BeatmapEventData) })]
-        public class bhaptics_LightChangeEffect
+        
+        public static void triggerEffectWithCheck()
         {
-            [HarmonyPostfix]
-            public static void Postfix(BeatmapEventData beatmapEventData)
+            // If last effects has been a while, reduce threshold
+            if (!timerLastEffect.IsRunning) timerLastEffect.Start();
+            if (timerLastEffect.ElapsedMilliseconds >= 2000)
             {
-                if (myEffectStrings.Count() == 0) return;
-                // If it's a "special" effect, just play a pattern
-                if ((beatmapEventData.type == BeatmapEventType.Special0) | (beatmapEventData.type == BeatmapEventType.Special1) | (beatmapEventData.type == BeatmapEventType.Special2) | (beatmapEventData.type == BeatmapEventType.Special3))
-                {
-                    tactsuitVr.PlaybackHaptics(tactsuitVr.myEffectStrings[rnd.Next(myEffectStrings.Count())]);
-                    return;
-                }
+                if (currentTriggerNumber > 1) currentTriggerNumber -= 1;
+                timerLastEffect.Restart();
+            }
 
-                // If last effects has been a while, reduce threshold
-                if (!timerLastEffect.IsRunning) timerLastEffect.Start();
-                if (timerLastEffect.ElapsedMilliseconds >= 2000)
-                {
-                    if (currentTriggerNumber > 1) currentTriggerNumber -= 1;
-                    timerLastEffect.Restart();
-                }
+            // Count number of effects at the "same time"
+            if (timerSameTime.ElapsedMilliseconds <= 100)
+            {
+                numberOfEvents += 1;
+                timerSameTime.Restart();
+            }
+            else
+            {
+                numberOfEvents = 0;
+                timerSameTime.Restart();
+            }
 
-                // Count number of effects at the "same time"
-                if (timerSameTime.ElapsedMilliseconds <= 100)
-                {
-                    numberOfEvents += 1;
-                    timerSameTime.Restart();
-                }
-                else
-                {
-                    numberOfEvents = 0;
-                    timerSameTime.Restart();
-                }
+            // If number of simultaneous events is above threshold, trigger effect
+            if (numberOfEvents >= currentTriggerNumber)
+            {
+                // reset trigger (if it was lowered)
+                currentTriggerNumber = defaultTriggerNumber;
+                string effectName = myEffectStrings[rnd.Next(myEffectStrings.Count())];
+                tactsuitVr.PlaybackHaptics(effectName);
 
-                // If number of simultaneous events is above threshold, trigger effect
-                if (numberOfEvents >= currentTriggerNumber)
+                // check if default trigger was set way too high or too low
+                float weight = (float)numberOfEvents / (float)defaultTriggerNumber / weightFactor;
+                if (weight > 5.0f) highWeights.Add(weight);
+                if (weight < 0.24f) highWeights.Add(weight);
+                // if this happened 4 times in a row, adjust trigger (only down)
+                if (highWeights.Count >= 4)
                 {
-                    // reset trigger (if it was lowered)
-                    currentTriggerNumber = defaultTriggerNumber;
-                    string effectName = myEffectStrings[rnd.Next(myEffectStrings.Count())];
-                    tactsuitVr.PlaybackHaptics(effectName);
-
-                    // check if default trigger was set way too high or too low
-                    float weight = (float)numberOfEvents / (float)defaultTriggerNumber / weightFactor;
-                    if (weight > 5.0f) highWeights.Add(weight);
-                    if (weight < 0.24f) highWeights.Add(weight);
-                    // if this happened 4 times in a row, adjust trigger (only down)
-                    if (highWeights.Count >= 4)
+                    weightFactor = highWeights.Average();
+                    if (weightFactor < 1.0f)
                     {
-                        weightFactor = highWeights.Average();
-                        if (weightFactor < 1.0f)
+                        if ((!reducedWeight) && (defaultTriggerNumber > 2))
                         {
-                            if ((!reducedWeight) && (defaultTriggerNumber > 2))
-                            {
-                                defaultTriggerNumber -= 1;
-                                tactsuitVr.LOG("Trigger adjusted! " + defaultTriggerNumber.ToString() + " " + weightFactor.ToString());
-                            }
+                            defaultTriggerNumber -= 1;
+                            tactsuitVr.LOG("Trigger adjusted! " + defaultTriggerNumber.ToString() + " " + weightFactor.ToString());
                         }
-                        else reducedWeight = true;
-                        highWeights.Clear();
                     }
+                    else reducedWeight = true;
+                    highWeights.Clear();
                 }
-
             }
         }
 
+        [HarmonyPatch(typeof(LightSwitchEventEffect), "HandleColorChangeBeatmapEvent", new Type[] { typeof(BasicBeatmapEventData) })]
+        public class bhaptics_LightChangeEffect
+        {
+            [HarmonyPostfix]
+            public static void Postfix(BasicBeatmapEventData basicBeatmapEventData)
+            {
+                if (myEffectStrings.Count() == 0) return;
+                // If it's a "special" effect (older maps), just play a pattern
+                if ((basicBeatmapEventData.basicBeatmapEventType == BasicBeatmapEventType.Special0) | (basicBeatmapEventData.basicBeatmapEventType == BasicBeatmapEventType.Special1) | (basicBeatmapEventData.basicBeatmapEventType == BasicBeatmapEventType.Special2) | (basicBeatmapEventData.basicBeatmapEventType == BasicBeatmapEventType.Special3))
+                {
+                    string effectName = myEffectStrings[rnd.Next(myEffectStrings.Count())];
+                    tactsuitVr.PlaybackHaptics(effectName);
+                }
+                triggerEffectWithCheck();
+            }
+        }
+
+        [HarmonyPatch(typeof(LightSwitchEventEffect), "HandleColorBoostBeatmapEvent", new Type[] { typeof(ColorBoostBeatmapEventData) })]
+        public class bhaptics_ColorBoostEffect
+        {
+            [HarmonyPostfix]
+            public static void Postfix()
+            {
+                tactsuitVr.LOG("Event!");
+                if (myEffectStrings.Count() == 0) return;
+                triggerEffectWithCheck();
+            }
+        }
         #endregion
 
         #region Map analysis
@@ -171,12 +185,13 @@ namespace bHapticsMusical
             // if there are too many ring effects, it gets annoying
             ringEffectOff = (beatmapData.spawnRotationEventsCount > 50);
             // count total number of events, estimate trigger number
-            numberOfEvents = beatmapData.beatmapEventsData.Count();
+            numberOfEvents = beatmapData.allBeatmapDataItems.Count();
             defaultTriggerNumber = numberOfEvents / 500;
             if (defaultTriggerNumber <= 1) defaultTriggerNumber = 2;
             currentTriggerNumber = defaultTriggerNumber;
+            tactsuitVr.LOG("Analyze data: " + currentTriggerNumber.ToString());
         }
-
+        /*
         [HarmonyPatch(typeof(BeatmapDataLoader), "GetBeatmapDataFromBinary", new Type[] { typeof(byte[]), typeof(float), typeof(float), typeof(float) })]
         public class bhaptics_GetBinaryData
         {
@@ -196,8 +211,8 @@ namespace bHapticsMusical
                 analyzeMap(__result);
             }
         }
-
-        [HarmonyPatch(typeof(BeatmapDataLoader), "GetBeatmapDataFromBeatmapSaveData", new Type[] { typeof(List<BeatmapSaveData.NoteData>), typeof(List<BeatmapSaveData.WaypointData>), typeof(List<BeatmapSaveData.ObstacleData>), typeof(List<BeatmapSaveData.EventData>), typeof(BeatmapSaveData.SpecialEventKeywordFiltersData), typeof(float), typeof(float), typeof(float) })]
+        
+        [HarmonyPatch(typeof(BeatmapDataLoader), "GetBeatmapDataFromBeatmapSaveData", new Type[] { typeof(List<BeatmapSaveDataVersion3.BeatmapSaveData>), typeof(float), typeof(bool), typeof(EnvironmentKeywords), typeof(EnvironmentLightGroups), typeof(DefaultEnvironmentEvents) })]
         public class bhaptics_GetMemoryData
         {
             [HarmonyPostfix]
@@ -206,8 +221,29 @@ namespace bHapticsMusical
                 analyzeMap(__result);
             }
         }
+        */
+        /*
+        [HarmonyPatch(typeof(BeatmapDataLoader), "GetBeatmapDataFromBeatmapSaveData", new Type[] { typeof(List<BeatmapSaveDataVersion3.BeatmapSaveData>), typeof(float), typeof(bool), typeof(EnvironmentInfoSO) })]
+        public class bhaptics_GetSaveData
+        {
+            [HarmonyPostfix]
+            public static void Postfix(BeatmapData __result)
+            {
+                analyzeMap(__result);
+            }
+        }
 
-
+        [HarmonyPatch(typeof(BeatmapData), "GetFilteredCopy", new Type[] { typeof(Func<BeatmapDataItem, BeatmapDataItem>) })]
+        public class bhaptics_GetBasicData
+        {
+            [HarmonyPostfix]
+            public static void Postfix(BeatmapData __result)
+            {
+                //beatmapSaveData.basicBeatmapEvents.Count();
+                analyzeMap(__result);
+            }
+        }
+        */
         #endregion
 
     }
