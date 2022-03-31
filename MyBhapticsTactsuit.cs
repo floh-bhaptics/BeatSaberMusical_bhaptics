@@ -120,6 +120,7 @@ namespace MyBhapticsTactsuit
         public void PlaybackHaptics(String key, float intensity = 1.0f, float duration = 1.0f)
         {
             //LOG("Trying to play");
+            if (suitDisabled) return;
             if (FeedbackMap.ContainsKey(key))
             {
                 //LOG("ScaleOption");
