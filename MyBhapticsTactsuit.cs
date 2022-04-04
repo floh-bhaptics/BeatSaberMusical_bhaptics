@@ -40,7 +40,7 @@ namespace MyBhapticsTactsuit
             try
             {
 #pragma warning disable CS0618 // remove warning that the C# library is deprecated
-                hapticPlayer = new HapticPlayer("BeatSaberMusical_bhaptics", "BeatSaberMusical_bhaptics", bhapticsPlayerConnected, false);
+                hapticPlayer = new HapticPlayer("bHapticsMusical", "bHapticsMusical", bhapticsPlayerConnected, false);
 #pragma warning restore CS0618
                 //suitDisabled = false;
             }
