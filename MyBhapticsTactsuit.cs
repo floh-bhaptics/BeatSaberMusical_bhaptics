@@ -32,7 +32,6 @@ namespace MyBhapticsTactsuit
         public HapticPlayer hapticPlayer;
 #pragma warning restore CS0618 
 
-
         private static RotationOption defaultRotationOption = new RotationOption(0.0f, 0.0f);
 
         public TactsuitVR()
@@ -41,15 +40,21 @@ namespace MyBhapticsTactsuit
             try
             {
 #pragma warning disable CS0618 // remove warning that the C# library is deprecated
-                hapticPlayer = new HapticPlayer("H3VR_bhaptics", "H3VR_bhaptics");
+                hapticPlayer = new HapticPlayer("BeatSaberMusical_bhaptics", "BeatSaberMusical_bhaptics", bhapticsPlayerConnected, false);
 #pragma warning restore CS0618
-                suitDisabled = false;
+                //suitDisabled = false;
             }
             catch { LOG("Suit initialization failed!"); }
             RegisterAllTactFiles();
             LOG("Starting HeartBeat thread...");
         }
-
+        
+        private void bhapticsPlayerConnected(bool connected)
+        {
+            //LOG("Connection changed " + connected);
+            suitDisabled = !connected;
+        }
+        
         public void LOG(string logStr)
         {
             Plugin.Log.Info(logStr);
@@ -60,6 +65,7 @@ namespace MyBhapticsTactsuit
 
         void RegisterAllTactFiles()
         {
+            if (suitDisabled) return;
             ResourceSet resourceSet = bHapticsMusical.Properties.Resources.ResourceManager.GetResourceSet(CultureInfo.InvariantCulture, true, true);
 
             foreach (DictionaryEntry dict in resourceSet)
@@ -108,7 +114,7 @@ namespace MyBhapticsTactsuit
                     hapticPlayer.RegisterTactFileStr(prefix, tactFileStr);
                     LOG("Light effect pattern registered: " + prefix);
                 }
-                catch (Exception e) { LOG(e.ToString()); }
+                catch (Exception e) { LOG("Pattern failed: " + e.ToString()); }
 
                 FeedbackMap.Add(prefix, tactFileStr);
                 myEffectStrings.Add(prefix);

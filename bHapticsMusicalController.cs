@@ -161,11 +161,36 @@ namespace bHapticsMusical
             [HarmonyPostfix]
             public static void Postfix()
             {
-                tactsuitVr.LOG("Event!");
+                //tactsuitVr.LOG("Event!");
                 if (myEffectStrings.Count() == 0) return;
                 triggerEffectWithCheck();
             }
         }
+        
+        [HarmonyPatch(typeof(BurstFireEffect), "HandleColorChangeBeatmapEvent", new Type[] { typeof(LightColorBeatmapEventData) })]
+        public class bhaptics_BurstFireEffect
+        {
+            [HarmonyPostfix]
+            public static void Postfix()
+            {
+                tactsuitVr.LOG("BurstFireEffect!");
+                if (myEffectStrings.Count() == 0) return;
+                triggerEffectWithCheck();
+            }
+        }
+
+        [HarmonyPatch(typeof(ContinuousFireEffect), "HandleColorChangeBeatmapEvent", new Type[] { typeof(LightColorBeatmapEventData) })]
+        public class bhaptics_ContinuousFireEffect
+        {
+            [HarmonyPostfix]
+            public static void Postfix()
+            {
+                tactsuitVr.LOG("ContinuousFireEffect!");
+                if (myEffectStrings.Count() == 0) return;
+                triggerEffectWithCheck();
+            }
+        }
+        
         #endregion
 
         #region Map analysis
